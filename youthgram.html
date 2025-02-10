@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelGram - Upload Your Travel Moments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .upload-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 50%;
+            margin: auto;
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #ff6600;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #e65c00;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Your Travel Image</h1>
+    <div class="upload-container">
+        <input type="file" id="imageUpload" accept="image/*">
+        <br>
+        <input type="text" id="captionInput" placeholder="Enter caption">
+        <br>
+        <button onclick="uploadPost()">Upload</button>
+    </div>
+
+    <script>
+        async function uploadPost() {
+            const fileInput = document.getElementById("imageUpload");
+            const captionInput = document.getElementById("captionInput");
+
+            if (fileInput.files.length === 0) {
+                alert("Please select an image.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("image", fileInput.files[0]);
+            formData.append("caption", captionInput.value || "No caption");
+
+            try {
+                const response = await fetch("http://localhost:5000/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Redirect to youthhome.html with the uploaded image ID
+                    window.location.href = `youthhome.html?latest=${data.imageId}`;
+                } else {
+                    alert("Failed to upload post: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading post:", error);
+                alert("Failed to upload post. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>

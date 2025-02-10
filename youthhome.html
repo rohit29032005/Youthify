@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelGram - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* Navbar Styling */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ff6600;
+            padding: 15px 30px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .navbar h1 {
+            color: white;
+            font-size: 24px;
+            margin: 0;
+        }
+        .post-btn {
+            background-color: white;
+            color: #ff6600;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .post-btn:hover {
+            background-color: #ff884d;
+            color: white;
+        }
+        
+        /* Post Styling */
+        .post-container {
+            width: 50%;
+            margin: auto;
+        }
+        .post {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .post:hover {
+            transform: scale(1.02);
+        }
+        img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .caption {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+        
+        /* Comment Section */
+        .comment-section {
+            margin-top: 10px;
+            text-align: left;
+        }
+        .username-input, .comment-input {
+            width: 80%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .comment-btn {
+            background-color: #ff6600;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-top: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .comment-btn:hover {
+            background-color: #e65c00;
+        }
+        .comments {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="TravelGram Logo" class="logo"> <!-- Add your logo file -->
+            <h1>TravelGram</h1>
+        </div>
+        <button class="post-btn" onclick="location.href='youthgram.html'">Post Pic</button>
+    </div>
+
+    <h1>TravelGram Feed</h1>
+    <div class="post-container" id="postContainer">
+        <!-- Posts will be dynamically inserted here -->
+    </div>
+
+    <script>
+        async function fetchPosts() {
+            try {
+                const response = await fetch("http://localhost:5000/posts");
+                const posts = await response.json();
+                
+                const postContainer = document.getElementById("postContainer");
+                postContainer.innerHTML = "";
+
+                posts.reverse().forEach(post => {
+                    const postElement = document.createElement("div");
+                    postElement.classList.add("post");
+                    postElement.id = `post-${post._id}`;
+                    postElement.innerHTML = `
+                        <img src="http://localhost:5000${post.image}" alt="Travel Image">
+                        <p class="caption">${post.caption}</p>
+                        <div class="comment-section">
+                            <input type="text" class="username-input" id="username-${post._id}" placeholder="Enter your username">
+                            <input type="text" class="comment-input" id="comment-${post._id}" placeholder="Add a comment">
+                            <button class="comment-btn" onclick="addComment('${post._id}')">Post</button>
+                            <div class="comments" id="comments-${post._id}">
+                                ${post.comments.map(comment => `<p><strong>${comment.username}</strong> - ${comment.text}</p>`).join("")}
+                            </div>
+                        </div>
+                    `;
+                    postContainer.appendChild(postElement);
+                });
+
+            } catch (error) {
+                console.error("Error fetching posts:", error);
+            }
+        }
+
+        async function addComment(postId) {
+            const usernameInput = document.getElementById(`username-${postId}`);
+            const commentInput = document.getElementById(`comment-${postId}`);
+            const username = usernameInput.value.trim();
+            const commentText = commentInput.value.trim();
+
+            if (!username || !commentText) {
+                alert("Username and Comment cannot be empty!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/comment/${postId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username: username, text: commentText })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to add comment");
+                }
+
+                const commentSection = document.getElementById(`comments-${postId}`);
+                const newComment = document.createElement("p");
+                newComment.innerHTML = `<strong>${username}</strong> - ${commentText}`;
+                commentSection.appendChild(newComment);
+                
+                usernameInput.value = "";
+                commentInput.value = "";
+            } catch (error) {
+                console.error("Error adding comment:", error);
+            }
+        }
+
+        window.onload = fetchPosts;
+    </script>
+</body>
+</html>
